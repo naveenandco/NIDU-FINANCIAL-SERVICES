@@ -13,3 +13,14 @@ Health cover estimates are planning examples only. Life cover estimate uses inco
 
 ## Security limitations
 Enquiry forms on the original static site prepare WhatsApp messages and store leads only in the current browser. This is not secure shared storage and must not be used as a production customer database. Configure a protected backend before collecting sensitive customer information.
+
+
+## Cloudflare Pages
+
+- Connected repository: `naveenandco/NIDU-FINANCIAL-SERVICES`
+- Production branch: `main`
+- Project: `nidu-financial-services`
+- Output directory: `.` (static site; no build command)
+- Custom domain: `nidufinancialservices.com`
+
+Changes committed to `main` are intended to deploy through Cloudflare Pages automatically.
