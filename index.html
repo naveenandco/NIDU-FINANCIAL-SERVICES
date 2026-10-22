@@ -267,7 +267,9 @@ $('#exportEnquiries').addEventListener('click',()=>{
   const leads=readLeads();
   if(!leads.length){showToast('There are no enquiries to export.');return}
   const cols=['createdAt','name','phone','email','service','requirement'];
-  const csv=[cols.join(','),...leads.map(x=>cols.map(k=>'"'+String(x[k]||'').replace(/"/g,'""').replace(/\r?\n/g,' ')+'"').join(','))].join('\r\n');
+  // Neutralize spreadsheet formula prefixes before quoting exported user-entered values.
+  const csvCell=value=>{let v=String(value??'').replace(/"/g,'""').replace(/\r?\n/g,' ');if(/^[\s]*[=+@-]/.test(v))v="'"+v;return '"'+v+'"';};
+  const csv=[cols.join(','),...leads.map(x=>cols.map(k=>csvCell(x[k])).join(','))].join('\r\n');
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob), a=document.createElement('a');
   a.href=url;a.download='nidu-enquiries.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
@@ -308,10 +310,13 @@ const back=$('#backtop');window.addEventListener('scroll',()=>{back.classList.to
    set('motorSummary','Details: vehicle age '+age+' years; location '+(location==='metro'?'Bengaluru / major city':'other location')+'; fuel '+fuel+'; IDV/value '+fmt(idv)+'; add-on preference '+(addon==='none'?'none selected':addon==='zero'?'zero depreciation if offered':'roadside assistance if offered')+'. A live insurer quotation is not connected, so no premium is shown.');
  }
  function consultation(service){
-   const url=new URL(window.location.href);url.hash='contact';
    const msg=document.getElementById('message');const sel=document.getElementById('service');
    if(sel){const options=[...sel.options];const match=options.find(o=>o.text.toLowerCase().includes(service.toLowerCase())||(service==='Term Life Insurance'&&o.text==='Life Insurance'));if(match)sel.value=match.value||match.text;}
-   if(msg)msg.value='Insurance consultation request: '+service+'.\nPlease contact me to discuss the calculator result and available options.';
+   let detail='';
+   if(service==='Health Insurance') detail='Health cover target: '+(document.getElementById('healthResult')?.textContent||'Not calculated')+'. '+(document.getElementById('healthExplanation')?.textContent||'');
+   else if(service==='Term Life Insurance') detail='Estimated life cover: '+(document.getElementById('lifeResult')?.textContent||'Not calculated')+'. Income replacement: '+(document.getElementById('lifeIncomeOut')?.textContent||'')+'. Loans and goals: '+(document.getElementById('lifeObligationsOut')?.textContent||'')+'. Existing cover and assets: '+(document.getElementById('lifeDeductionsOut')?.textContent||'')+'.';
+   else if(service==='Motor Insurance') detail=(document.getElementById('motorExplanation')?.textContent||'')+' '+(document.getElementById('motorSummary')?.textContent||'');
+   if(msg)msg.value='Insurance consultation request: '+service+'.\nCalculator details: '+detail+'\nPlease contact me to discuss suitable options. I understand these results are illustrative and are not insurer quotations.';
    window.location.hash='contact';document.getElementById('name')?.focus({preventScroll:true});
  }
  document.getElementById('healthCalc')?.addEventListener('click',calcHealth);
